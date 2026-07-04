@@ -1,0 +1,134 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: api-that-scale-postgres
+
+    environment:
+      POSTGRES_DB: api_that_scale
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: rahul
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+
+    command:
+      - postgres
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - work_mem=32MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - max_connections=300
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql
+
+    networks:
+      - api-that-scale-network
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d api_that_scale"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: api-that-scale-redis
+
+    ports:
+      - "6379:6379"
+
+    networks:
+      - api-that-scale-network
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:7
+    container_name: api-that-scale-pgadmin
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+
+    ports:
+      - "8080:80"
+
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+    networks:
+      - api-that-scale-network
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+  api-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: api-that-scale-app
+
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_DATABASE: api_that_scale
+      PG_USER: postgres
+      PG_PASSWORD: rahul
+
+      REDIS_URL: redis://redis:6379
+
+    ports:
+      - "5000:5000"
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+
+    networks:
+      - api-that-scale-network
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  api-that-scale-network:
+    driver: bridge

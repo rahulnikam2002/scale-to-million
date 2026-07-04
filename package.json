@@ -1,0 +1,47 @@
+{
+  "name": "scale-to-million",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "seed": "tsx scripts/seed.ts",
+    "seed:small": "TOTAL_RECORDS=1000 BATCH_SIZE=1000 tsx scripts/seed.ts",
+    "seed:medium": "TOTAL_RECORDS=100000 BATCH_SIZE=5000 tsx scripts/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "compression": "^1.8.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.2.0",
+    "http-status-codes": "^2.3.0",
+    "pg": "^8.22.0",
+    "pg-copy-streams": "^7.0.0",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "redis": "^6.1.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/helmet": "^0.0.48",
+    "@types/node": "^26.1.0",
+    "@types/pg": "^8.20.0",
+    "@types/pg-copy-streams": "^1.2.5",
+    "nodemon": "^3.1.14",
+    "tsx": "^4.23.0",
+    "typescript": "^6.0.3"
+  }
+}
