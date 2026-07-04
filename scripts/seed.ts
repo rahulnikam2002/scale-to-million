@@ -14,6 +14,11 @@ const pool = new Pool({
   user: process.env.PG_USER ?? 'postgres',
   password: process.env.PG_PASSWORD,
   max: 2,
+
+  ssl:
+    process.env.PG_HOST?.includes('amazonaws.com')
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 async function getExistingCount(): Promise<number> {
